@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t cozco/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true cozco/react-test npm test
+
+after_success:
+  - docker build -t cozco/multi-client ./client
+  - docker build -t cozco/multi-nginx ./nginx
+  - docker build -t cozco/multi-server ./server
+  - docker build -t cozco/multi-worker ./worker
+  #Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Push images to docker hub
+  - docker push cozco/multi-client
+  - docker push cozco/multi-nginx
+  - docker push cozco/multi-server
+  - docker push cozco/multi-worker
+
